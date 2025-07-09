@@ -1,0 +1,62 @@
+TASK 1
+
+1.) What steps are required to open an X11 window and receive events?
+- Install libx11-dev, include necessary headers
+- #include <X11/Xlib.h> #include <stdio.h> #include <stdlib.h>
+- open a connection to the X server, here:
+
+Display *dpy = XOpenDisplay(NULL);
+    if (!dpy) {
+        fprintf(stderr, "Cannot open display\n");
+        return EXIT_FAILURE;
+
+- get the default screen, here:
+
+int screen = DefaultScreen(dpy);
+
+- create a window, here:
+
+ Window win = XCreateSimpleWindow(
+        dpy, RootWindow(dpy, screen),
+        10, 10, 400, 300, 1,
+        BlackPixel(dpy, screen),
+        WhitePixel(dpy, screen)
+    );
+
+- select input events to receive: XSelectInput(dpy, win, ExposureMask | KeyPressMask);
+- show the window: XMapWindow(dpy, win);
+- event loop to process event, here:
+
+    for(;;) {
+        XEvent e;
+        XNextEvent(dpy, &e);
+        if (e.type == Expose) {
+            // Draw a rectangle
+            XDrawRectangle(dpy, win, gc, 50, 50, 200, 100);
+        }
+        if (e.type == KeyPress)
+            break;
+    }
+
+- close the connection and clean up:
+
+ XFreeGC(dpy, gc);
+    XDestroyWindow(dpy, win);
+    XCloseDisplay(dpy);
+
+2.) How does the Expose event trigger your drawing code?
+The expose mechanism tells your application to redraw the windows content, to ensure it is visually updated when necessary. It is triggered by:
+- first appearance of the window (XMapWindow)
+- another window covering it is moved or closed
+- resizing the window
+- XClearWindow()
+
+TASK 2
+
+1.) How does GTK’s signal-and-callback mechanism differ from X11’s event loop?
+Wirh X11 you manually handle events using a loop. You write all the logic yourself and there is no other callback connection than manuel funcion calls. With GTK, events are handled automatically. GTK connects signals to functions (callbacks) via g_signal_connect () what makes it easier to work with. 
+
+2.) Why use pkg-config when compiling GTK applications? 
+pkg-config helps you manage all necessary compiler flags automatically, which saves time and helps you avoid mistakes.
+
+
